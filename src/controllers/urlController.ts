@@ -63,6 +63,10 @@ export async function redirectToOriginal(req: Request, res: Response) {
   try {
     const { shortCode } = req.params;
 
+    if (!shortCode || Array.isArray(shortCode)) {
+        return res.status(400).json({ error: "Invalid short code" });
+      }
+
     const url = await findByShortCode(shortCode);
 
     if (!url) {
