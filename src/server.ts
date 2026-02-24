@@ -1,7 +1,10 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
+import cors from "cors";
+
 import { pool } from "./config/database";
 import { shortenUrl, redirectToOriginal } from "./controllers/urlController";
+import path from "path";
 
 // Load environment variables from .env
 dotenv.config();
@@ -16,6 +19,14 @@ const BASE_URL = process.env.BASE_URL;
 
 const app = express();
 
+app.use(cors({
+    origin: [
+      "http://localhost:5173", // dev frontend
+      "https://your-frontend-render-url.onrender.com" // prod frontend
+    ],
+    methods: ["GET", "POST"]
+  }));
+
 // JSON middleware
 app.use(express.json());
 
@@ -28,6 +39,17 @@ app.get("/health", (_req: Request, res: Response) => {
 app.use(express.json());
 app.post("/shorten", shortenUrl);
 app.get("/:shortCode", redirectToOriginal);
+
+// === Serve frontend in production ===
+if (process.env.NODE_ENV === "production") {
+    const frontendDistPath = path.join(__dirname, "../frontend/dist");
+    app.use(express.static(frontendDistPath));
+  
+    // SPA redirect for React Router
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(frontendDistPath, "index.html"));
+    });
+  }
 
 // ---------------------
 // Test DB connection at startup
