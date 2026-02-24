@@ -43,10 +43,11 @@ app.get("/:shortCode", redirectToOriginal);
 // === Serve frontend in production ===
 if (process.env.NODE_ENV === "production") {
     const frontendDistPath = path.join(__dirname, "../frontend/dist");
+  
     app.use(express.static(frontendDistPath));
   
-    // SPA redirect for React Router
-    app.get("/*", (_req, res) => {
+    // SPA fallback (Express 5 safe)
+    app.get(/.*/, (_req, res) => {
       res.sendFile(path.join(frontendDistPath, "index.html"));
     });
   }
